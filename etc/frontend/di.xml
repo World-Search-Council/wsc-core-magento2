@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <type name="Magento\Framework\App\FrontControllerInterface">
+        <plugin name="wsc_analytics_front_controller_plugin"
+                type="Wsc\Analytics\Plugin\FrontControllerPlugin"
+                sortOrder="10"/>
+    </type>
+</config>

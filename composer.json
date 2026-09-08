@@ -1,0 +1,27 @@
+{
+    "name": "wsc/wsc-analytics-magento2",
+    "description": "Privacy-first, cookieless hybrid analytics, AI bot shield, and server-side order tracking for Magento 2 / Adobe Commerce.",
+    "type": "magento2-module",
+    "version": "2.2.0",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "World Search Council",
+            "homepage": "https://github.com/World-Search-Council/wsc-core-magento2"
+        }
+    ],
+    "require": {
+        "php": ">=7.4 || >=8.1 || >=8.2 || >=8.3",
+        "magento/framework": "*",
+        "magento/module-sales": "*",
+        "magento/module-checkout": "*"
+    },
+    "autoload": {
+        "files": [
+            "registration.php"
+        ],
+        "psr-4": {
+            "Wsc\\Analytics\\": ""
+        }
+    }
+}

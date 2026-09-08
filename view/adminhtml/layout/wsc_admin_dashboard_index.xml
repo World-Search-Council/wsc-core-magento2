@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <head>
+        <css src="Wsc_Analytics::css/wsc-dashboard.css"/>
+        <script src="Wsc_Analytics::js/wsc-dashboard.js"/>
+    </head>
+    <body>
+        <referenceContainer name="content">
+            <block class="Wsc\Analytics\Block\Adminhtml\Dashboard"
+                   name="wsc.admin.dashboard"
+                   template="Wsc_Analytics::dashboard.phtml"/>
+        </referenceContainer>
+    </body>
+</page>

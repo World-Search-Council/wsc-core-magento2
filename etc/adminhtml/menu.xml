@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="Wsc_Analytics::main"
+             title="WSC Analytics"
+             module="Wsc_Analytics"
+             sortOrder="50"
+             resource="Wsc_Analytics::dashboard"/>
+        <add id="Wsc_Analytics::dashboard"
+             title="Dashboard &amp; Bot Shield"
+             module="Wsc_Analytics"
+             sortOrder="10"
+             parent="Wsc_Analytics::main"
+             action="wsc_admin/dashboard/index"
+             resource="Wsc_Analytics::dashboard"/>
+    </menu>
+</config>

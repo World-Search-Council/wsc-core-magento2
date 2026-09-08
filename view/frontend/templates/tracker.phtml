@@ -1,0 +1,8 @@
+<?php
+/** @var \Wsc\Analytics\Block\Tracker $block */
+if ($block->isTrackingActive()):
+?>
+<script>
+    window.WSC_CONFIG = <?= /* @noEscape */ $block->getJsonConfig() ?>;
+</script>
+<?php endif; ?>
