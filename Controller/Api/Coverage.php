@@ -59,7 +59,7 @@ class Coverage implements HttpPostActionInterface
                 'X-WSC-Sig'    => $signature,
             ]);
             $this->curl->setTimeout(10);
-            $this->curl->post('https://gateway.worldseocouncil.com/v1/ai-coverage/query', $payload);
+            $this->curl->post('https://api.worldsearchcouncil.org/v1/ai-coverage/query', $payload);
 
             $responseBody = $this->curl->getBody();
             $decoded = json_decode($responseBody, true);

@@ -33,7 +33,7 @@ class Data extends AbstractHelper
 
     public function getGatewayUrl(?int $storeId = null): string
     {
-        return (string) $this->scopeConfig->getValue(self::XML_PATH_GATEWAY_URL, ScopeInterface::SCOPE_STORE, $storeId) ?: 'https://api.worldseocouncil.com';
+        return (string) $this->scopeConfig->getValue(self::XML_PATH_GATEWAY_URL, ScopeInterface::SCOPE_STORE, $storeId) ?: 'https://api.worldsearchcouncil.org';
     }
 
     public function getProjectId(?int $storeId = null): string
