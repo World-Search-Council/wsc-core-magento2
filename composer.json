@@ -3,11 +3,12 @@
     "description": "Privacy-first, cookieless hybrid analytics, AI bot shield, and server-side order tracking for Magento 2 / Adobe Commerce.",
     "type": "magento2-module",
     "version": "2.2.0",
+    "homepage": "https://www.worldsearchcouncil.org",
     "license": "GPL-2.0-or-later",
     "authors": [
         {
             "name": "World Search Council",
-            "homepage": "https://github.com/World-Search-Council/wsc-core-magento2"
+            "homepage": "https://www.worldsearchcouncil.org"
         }
     ],
     "require": {
