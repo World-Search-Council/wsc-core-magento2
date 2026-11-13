@@ -1,13 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wsc\Analytics\Controller\Api;
 
 use Magento\Framework\App\Action\HttpPostActionInterface;
+use Magento\Framework\App\CsrfAwareActionInterface;
+use Magento\Framework\App\Request\InvalidRequestException;
 use Magento\Framework\App\RequestInterface;
 use Magento\Framework\Controller\Result\JsonFactory;
 use Wsc\Analytics\Model\CoreService;
 
-class Webhook implements HttpPostActionInterface
+class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface
 {
     private RequestInterface $request;
     private JsonFactory $jsonFactory;
@@ -23,16 +27,23 @@ class Webhook implements HttpPostActionInterface
         $this->coreService = $coreService;
     }
 
+    public function createCsrfValidationException(RequestInterface $request): ?InvalidRequestException
+    {
+        return null;
+    }
+
+    public function validateForCsrf(RequestInterface $request): ?bool
+    {
+        return true;
+    }
+
     public function execute()
     {
         $result = $this->jsonFactory->create();
-        $content = $this->request->getContent();
+        $content = (string) $this->request->getContent();
         $signature = (string) $this->request->getHeader('X-WSC-Sig');
 
-        $creds = $this->coreService->getProjectCredentials();
-        $expectedSig = hash_hmac('sha256', $content, $creds['local_key']);
-
-        if (!hash_equals($expectedSig, $signature)) {
+        if (!$this->coreService->verifyWebhookSignature($content, $signature)) {
             return $result->setHttpResponseCode(403)->setData(['ok' => false, 'error' => 'invalid_signature']);
         }
 

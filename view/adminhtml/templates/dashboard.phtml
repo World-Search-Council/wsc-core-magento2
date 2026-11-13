@@ -2,6 +2,13 @@
 /** @var \Wsc\Analytics\Block\Adminhtml\Dashboard $block */
 $cards = $block->getCards();
 $creds = $block->getCredentials();
+$membership = $block->getMembership();
+$partners = $block->getFeaturedPartners();
+$benchmarks = $block->getBenchmarkReport();
+$verticals = $block->getBenchmarkVerticals();
+$isLicensed = !empty($membership['is_licensed']);
+$coBranding = $membership['co_branding'] ?? [];
+
 $card1 = $cards['card1_traffic'] ?? ($cards['card1'] ?? []);
 $card2 = $cards['card2_insights'] ?? ($cards['card2'] ?? []);
 $card3 = $cards['card3_bots'] ?? ($cards['card3'] ?? []);
@@ -11,17 +18,47 @@ $cardEcommerce = $cards['card_ecommerce'] ?? [];
 $domainHealth = $cards['domain_health'] ?? [];
 $pagespeed = $cards['pagespeed'] ?? [];
 $hasData = $block->hasData();
+$siteUrl = rtrim($block->getSiteUrl(), '/');
+$indexNowKey = $block->getIndexNowKey();
+$indexNowLogs = $block->getIndexNowLogs();
 ?>
 
 <div class="wsc-dashboard-wrapper">
+    <?php if ($isLicensed && !empty($coBranding['enabled']) && !empty($coBranding['name'])): ?>
+        <div class="wsc-cobranding-bar" style="display:flex;align-items:center;justify-content:space-between;background:#0f172a;color:#f8fafc;padding:0.75rem 1.25rem;border-radius:8px;margin-bottom:1.25rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;">
+                <?php if (!empty($coBranding['logo_url'])): ?>
+                    <img src="<?= $block->escapeUrl($coBranding['logo_url']) ?>" alt="<?= $block->escapeHtmlAttr($coBranding['name']) ?>" style="max-height:28px;border-radius:4px;">
+                <?php endif; ?>
+                <div>
+                    <strong><?= $block->escapeHtml($coBranding['name']) ?></strong>
+                    <?php if (!empty($coBranding['tagline'])): ?>
+                        <span style="opacity:0.8;margin-left:0.5rem;">&mdash; <?= $block->escapeHtml($coBranding['tagline']) ?></span>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php if (!empty($coBranding['url'])): ?>
+                <a href="<?= $block->escapeUrl($coBranding['url']) ?>" target="_blank" rel="noopener" style="color:#38bdf8;text-decoration:none;font-weight:600;"><?= __('Agency Support ↗') ?></a>
+            <?php endif; ?>
+        </div>
+    <?php endif; ?>
+
     <!-- Top Bar & Diagnostics Header -->
     <div class="wsc-dashboard-header">
         <div class="wsc-header-left">
-            <h2><?= __('WSC Analytics & Bot Shield') ?> <span class="wsc-version-pill">v2.2.0</span></h2>
+            <h2>
+                <?= __('WSC Search & Health') ?> <span class="wsc-version-pill">v2.2.3</span>
+                <?php if ($isLicensed): ?>
+                    <span class="wsc-badge wsc-badge-success" style="margin-left:0.5rem;">
+                        ✓ <?= $block->escapeHtml(strtoupper((string)($membership['tier'] ?? 'MEMBER'))) ?><?= !empty($membership['is_demo']) ? ' (DEMO)' : '' ?>
+                    </span>
+                <?php endif; ?>
+            </h2>
             <p class="wsc-meta-text">
-                <?= __('Project ID:') ?> <code><?= $block->escapeHtml($creds['project_id'] ?? '') ?></code> &bull;
+                <?= __('Project ID:') ?> <code><?= $block->escapeHtml(($creds['project_id'] ?? '') ?: 'local-only (opt-in)') ?></code> &bull;
                 <?= __('Host:') ?> <strong><?= $block->escapeHtml($block->getSiteHost()) ?></strong> &bull;
-                <?= __('Platform:') ?> <span>Magento 2 / Adobe Commerce Enterprise</span>
+                <?= __('Platform:') ?> <span>Magento 2 / Adobe Commerce</span> &bull;
+                <?= __('Gateway Sync:') ?> <strong><?= !empty($creds['hybrid']) ? __('Enabled') : __('Local-Only (Opt-In)') ?></strong>
             </p>
         </div>
         <div class="wsc-header-actions">
@@ -58,8 +95,8 @@ $hasData = $block->hasData();
     <?php if (!$hasData): ?>
         <div class="message message-notice notice" style="margin-bottom: 1.5rem;">
             <div>
-                <strong><?= __('Waiting for initial telemetry synchronization') ?></strong><br>
-                <?= __('Magento 2 server-side orders and edge bot telemetry are stored in local SQLite and sync to the WSC Gateway automatically via cron.') ?>
+                <strong><?= __('Zero-PII Local SQLite WAL Telemetry Active') ?></strong><br>
+                <?= __('Magento 2 server-side orders and edge bot telemetry are buffered in local SQLite WAL. Enable Hybrid Gateway Sync in Stores -> Configuration -> World Search Council when ready for cloud ClickHouse analytics.') ?>
             </div>
         </div>
     <?php endif; ?>
@@ -77,30 +114,30 @@ $hasData = $block->hasData();
                 <div class="wsc-kpi-row">
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label"><?= __('Visitors') ?></span>
-                        <strong class="wsc-kpi-val" id="val-visitors"><?= $block->escapeHtml($card1['data_7d']['visitors'] ?? '0') ?></strong>
+                        <strong class="wsc-kpi-val" id="val-visitors"><?= $block->escapeHtml((string)($card1['data_7d']['visitors'] ?? '0')) ?></strong>
                     </div>
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label"><?= __('Pageviews') ?></span>
-                        <strong class="wsc-kpi-val" id="val-pageviews"><?= $block->escapeHtml($card1['data_7d']['pageviews'] ?? '0') ?></strong>
+                        <strong class="wsc-kpi-val" id="val-pageviews"><?= $block->escapeHtml((string)($card1['data_7d']['pageviews'] ?? '0')) ?></strong>
                     </div>
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label"><?= __('Engaged') ?></span>
-                        <strong class="wsc-kpi-val" id="val-engaged"><?= $block->escapeHtml($card1['data_7d']['avg_engaged_time'] ?? '0s') ?></strong>
+                        <strong class="wsc-kpi-val" id="val-engaged"><?= $block->escapeHtml((string)($card1['data_7d']['avg_engaged_time'] ?? '0s')) ?></strong>
                     </div>
                 </div>
 
                 <div class="wsc-channel-block">
                     <h4><?= __('Acquisition Channels') ?></h4>
                     <div class="wsc-progress-bar">
-                        <div class="wsc-pb-seg wsc-bg-purple" style="width: <?= (float)($card1['data_7d']['channels']['ai_pct'] ?? 0) ?>%"></div>
-                        <div class="wsc-pb-seg wsc-bg-blue" style="width: <?= (float)($card1['data_7d']['channels']['search_pct'] ?? 0) ?>%"></div>
-                        <div class="wsc-pb-seg wsc-bg-red" style="width: <?= (float)($card1['data_7d']['channels']['social_pct'] ?? 0) ?>%"></div>
-                        <div class="wsc-pb-seg wsc-bg-green" style="width: <?= (float)($card1['data_7d']['channels']['direct_pct'] ?? 0) ?>%"></div>
+                        <div class="wsc-pb-seg wsc-bg-purple" id="seg-ai" style="width: <?= (float)($card1['data_7d']['channels']['ai_pct'] ?? 0) ?>%"></div>
+                        <div class="wsc-pb-seg wsc-bg-blue" id="seg-search" style="width: <?= (float)($card1['data_7d']['channels']['search_pct'] ?? 0) ?>%"></div>
+                        <div class="wsc-pb-seg wsc-bg-red" id="seg-social" style="width: <?= (float)($card1['data_7d']['channels']['social_pct'] ?? 0) ?>%"></div>
+                        <div class="wsc-pb-seg wsc-bg-green" id="seg-direct" style="width: <?= (float)($card1['data_7d']['channels']['direct_pct'] ?? 0) ?>%"></div>
                     </div>
                     <div class="wsc-legend">
-                        <span><i class="wsc-dot wsc-bg-purple"></i> AI (<?= (float)($card1['data_7d']['channels']['ai_pct'] ?? 0) ?>%)</span>
-                        <span><i class="wsc-dot wsc-bg-blue"></i> Search (<?= (float)($card1['data_7d']['channels']['search_pct'] ?? 0) ?>%)</span>
-                        <span><i class="wsc-dot wsc-bg-red"></i> Social (<?= (float)($card1['data_7d']['channels']['social_pct'] ?? 0) ?>%)</span>
+                        <span><i class="wsc-dot wsc-bg-purple"></i> AI (<span id="lbl-ai-pct"><?= (float)($card1['data_7d']['channels']['ai_pct'] ?? 0) ?></span>%)</span>
+                        <span><i class="wsc-dot wsc-bg-blue"></i> Search (<span id="lbl-search-pct"><?= (float)($card1['data_7d']['channels']['search_pct'] ?? 0) ?></span>%)</span>
+                        <span><i class="wsc-dot wsc-bg-red"></i> Social (<span id="lbl-social-pct"><?= (float)($card1['data_7d']['channels']['social_pct'] ?? 0) ?></span>%)</span>
                     </div>
                 </div>
             </div>
@@ -117,15 +154,15 @@ $hasData = $block->hasData();
                     <span class="wsc-badge wsc-badge-info"><?= __('AI Analyst') ?></span>
                 </div>
 
-                <p class="wsc-summary-text">
-                    <?= $block->escapeHtml($card2['data_7d']['summary'] ?? __('Autonomous traffic patterns stable. Real-time anomalies appear as telemetry accumulates.')) ?>
+                <p class="wsc-summary-text" id="val-insight-summary">
+                    <?= $block->escapeHtml((string)($card2['data_7d']['summary'] ?? __('Autonomous traffic patterns stable. Real-time anomalies appear as telemetry accumulates.'))) ?>
                 </p>
 
                 <h4><?= __('Recommended Actions:') ?></h4>
-                <ul class="wsc-action-list">
+                <ul class="wsc-action-list" id="val-insight-actions">
                     <?php if (!empty($card2['data_7d']['actions'])): ?>
                         <?php foreach ($card2['data_7d']['actions'] as $action): ?>
-                            <li><strong>&bull; <?= $block->escapeHtml($action['title']) ?>:</strong> <?= $block->escapeHtml($action['description']) ?></li>
+                            <li><strong>&bull; <?= $block->escapeHtml((string)($action['title'] ?? '')) ?>:</strong> <?= $block->escapeHtml((string)($action['description'] ?? '')) ?></li>
                         <?php endforeach; ?>
                     <?php else: ?>
                         <li>&bull; <?= __('Autonomous e-commerce store monitoring operational.') ?></li>
@@ -147,12 +184,12 @@ $hasData = $block->hasData();
 
                 <div class="wsc-kpi-row wsc-bg-light">
                     <div class="wsc-kpi-col">
-                        <strong class="wsc-kpi-val text-success" id="val-human-pct"><?= $block->escapeHtml($card3['data_7d']['human_pct'] ?? '100') ?>%</strong>
+                        <strong class="wsc-kpi-val text-success" id="val-human-pct"><?= $block->escapeHtml((string)($card3['data_7d']['human_pct'] ?? '100')) ?>%</strong>
                         <span class="wsc-kpi-label"><?= __('Real Humans') ?></span>
                     </div>
                     <div class="wsc-kpi-col-divider">vs</div>
                     <div class="wsc-kpi-col">
-                        <strong class="wsc-kpi-val text-danger" id="val-bot-pct"><?= $block->escapeHtml($card3['data_7d']['bot_pct'] ?? '0') ?>%</strong>
+                        <strong class="wsc-kpi-val text-danger" id="val-bot-pct"><?= $block->escapeHtml((string)($card3['data_7d']['bot_pct'] ?? '0')) ?>%</strong>
                         <span class="wsc-kpi-label"><?= __('Bots & Crawlers') ?></span>
                     </div>
                 </div>
@@ -160,15 +197,15 @@ $hasData = $block->hasData();
                 <div class="wsc-bot-list">
                     <div class="wsc-bot-item">
                         <span><?= __('AI Live RAG Search:') ?></span>
-                        <strong id="val-ai-rag"><?= $block->escapeHtml($card3['data_7d']['ai_rag_hits'] ?? 0) ?></strong>
+                        <strong id="val-ai-rag"><?= $block->escapeHtml((string)($card3['data_7d']['ai_rag_hits'] ?? 0)) ?></strong>
                     </div>
                     <div class="wsc-bot-item">
                         <span><?= __('AI Training Scrapers:') ?></span>
-                        <strong id="val-ai-training"><?= $block->escapeHtml($card3['data_7d']['ai_training_hits'] ?? 0) ?></strong>
+                        <strong id="val-ai-training"><?= $block->escapeHtml((string)($card3['data_7d']['ai_training_hits'] ?? 0)) ?></strong>
                     </div>
                     <div class="wsc-bot-item">
                         <span><?= __('Search Engines (Google/Bing):') ?></span>
-                        <strong id="val-search-bots"><?= $block->escapeHtml($card3['data_7d']['search_hits'] ?? 0) ?></strong>
+                        <strong id="val-search-bots"><?= $block->escapeHtml((string)($card3['data_7d']['search_hits'] ?? 0)) ?></strong>
                     </div>
                 </div>
             </div>
@@ -188,34 +225,34 @@ $hasData = $block->hasData();
                 <div class="wsc-kpi-row">
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label"><?= __('Read Time') ?></span>
-                        <strong class="wsc-kpi-val"><?= $block->escapeHtml($cardEngagement['data_7d']['avg_reading_time'] ?? '52s') ?></strong>
+                        <strong class="wsc-kpi-val" id="val-read-time"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['avg_reading_time'] ?? '52s')) ?></strong>
                     </div>
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label"><?= __('TTFI') ?></span>
-                        <strong class="wsc-kpi-val"><?= $block->escapeHtml($cardEngagement['data_7d']['avg_ttfi'] ?? '0.9s') ?></strong>
+                        <strong class="wsc-kpi-val" id="val-ttfi"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['avg_ttfi'] ?? '0.9s')) ?></strong>
                     </div>
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label"><?= __('Focus Ratio') ?></span>
-                        <strong class="wsc-kpi-val"><?= $block->escapeHtml($cardEngagement['data_7d']['focus_ratio'] ?? '88%') ?></strong>
+                        <strong class="wsc-kpi-val" id="val-focus-ratio"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['focus_ratio'] ?? '88%')) ?></strong>
                     </div>
                 </div>
 
                 <div class="wsc-milestone-list">
                     <div class="wsc-bot-item">
                         <span>25% <?= __('Scroll (Hero & Highlights)') ?></span>
-                        <span class="wsc-badge"><?= $block->escapeHtml($cardEngagement['data_7d']['scroll_25'] ?? '94%') ?></span>
+                        <span class="wsc-badge" id="val-scroll-25"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['scroll_25'] ?? '94%')) ?></span>
                     </div>
                     <div class="wsc-bot-item">
                         <span>50% <?= __('Scroll (Product Description)') ?></span>
-                        <span class="wsc-badge"><?= $block->escapeHtml($cardEngagement['data_7d']['scroll_50'] ?? '76%') ?></span>
+                        <span class="wsc-badge" id="val-scroll-50"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['scroll_50'] ?? '76%')) ?></span>
                     </div>
                     <div class="wsc-bot-item">
                         <span>75% <?= __('Scroll (Specs & Reviews)') ?></span>
-                        <span class="wsc-badge"><?= $block->escapeHtml($cardEngagement['data_7d']['scroll_75'] ?? '49%') ?></span>
+                        <span class="wsc-badge" id="val-scroll-75"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['scroll_75'] ?? '49%')) ?></span>
                     </div>
                     <div class="wsc-bot-item">
                         <span>100% <?= __('Scroll (Related Items & Footer)') ?></span>
-                        <span class="wsc-badge"><?= $block->escapeHtml($cardEngagement['data_7d']['scroll_100'] ?? '31%') ?></span>
+                        <span class="wsc-badge" id="val-scroll-100"><?= $block->escapeHtml((string)($cardEngagement['data_7d']['scroll_100'] ?? '31%')) ?></span>
                     </div>
                 </div>
             </div>
@@ -239,21 +276,21 @@ $hasData = $block->hasData();
                 <div class="wsc-kpi-row">
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label">💳 Payment</span>
-                        <strong class="wsc-kpi-val">48%</strong>
+                        <strong class="wsc-kpi-val" id="val-out-payment"><?= $block->escapeHtml((string)($cardOutbound['data_7d']['payment_pct'] ?? '48%')) ?></strong>
                     </div>
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label">📱 Social</span>
-                        <strong class="wsc-kpi-val">34%</strong>
+                        <strong class="wsc-kpi-val" id="val-out-social"><?= $block->escapeHtml((string)($cardOutbound['data_7d']['social_pct'] ?? '34%')) ?></strong>
                     </div>
                     <div class="wsc-kpi-col">
                         <span class="wsc-kpi-label">🏢 Partners</span>
-                        <strong class="wsc-kpi-val">18%</strong>
+                        <strong class="wsc-kpi-val" id="val-out-partners"><?= $block->escapeHtml((string)($cardOutbound['data_7d']['partners_pct'] ?? '18%')) ?></strong>
                     </div>
                 </div>
 
                 <div class="wsc-bot-item">
                     <span><?= __('Top Outbound:') ?></span>
-                    <strong>paypal.com, klarna.com, instagram.com</strong>
+                    <strong id="val-out-top"><?= $block->escapeHtml((string)($cardOutbound['data_7d']['top_domains'] ?? 'paypal.com, klarna.com, instagram.com')) ?></strong>
                 </div>
             </div>
             <div class="wsc-card-footer">
@@ -272,25 +309,25 @@ $hasData = $block->hasData();
                 <div class="wsc-funnel-bar-grid">
                     <div class="wsc-funnel-step">
                         <span class="wsc-step-label">1. Product Views</span>
-                        <strong class="wsc-step-val"><?= $block->escapeHtml($cardEcommerce['data_7d']['product_views'] ?? '5,420') ?></strong>
+                        <strong class="wsc-step-val" id="val-ec-views"><?= $block->escapeHtml((string)($cardEcommerce['data_7d']['product_views'] ?? '0')) ?></strong>
                     </div>
                     <div class="wsc-funnel-step">
                         <span class="wsc-step-label">2. Add to Cart</span>
-                        <strong class="wsc-step-val"><?= $block->escapeHtml($cardEcommerce['data_7d']['add_to_cart'] ?? '890') ?></strong>
+                        <strong class="wsc-step-val" id="val-ec-cart"><?= $block->escapeHtml((string)($cardEcommerce['data_7d']['add_to_cart'] ?? '0')) ?></strong>
                     </div>
                     <div class="wsc-funnel-step">
                         <span class="wsc-step-label">3. Checkout Start</span>
-                        <strong class="wsc-step-val"><?= $block->escapeHtml($cardEcommerce['data_7d']['checkout_started'] ?? '410') ?></strong>
+                        <strong class="wsc-step-val" id="val-ec-checkout"><?= $block->escapeHtml((string)($cardEcommerce['data_7d']['checkout_started'] ?? '0')) ?></strong>
                     </div>
                     <div class="wsc-funnel-step">
                         <span class="wsc-step-label">4. Orders Placed</span>
-                        <strong class="wsc-step-val text-success"><?= $block->escapeHtml($cardEcommerce['data_7d']['purchases'] ?? '245') ?></strong>
+                        <strong class="wsc-step-val text-success" id="val-ec-purchases"><?= $block->escapeHtml((string)($cardEcommerce['data_7d']['purchases'] ?? '0')) ?></strong>
                     </div>
                 </div>
 
                 <div class="wsc-bot-item" style="margin-top: 0.75rem;">
-                    <span><?= __('Conversion Rate:') ?> <strong><?= $block->escapeHtml($cardEcommerce['data_7d']['conversion_rate'] ?? '4.52%') ?></strong></span>
-                    <span><?= __('Abandonment:') ?> <strong><?= $block->escapeHtml($cardEcommerce['data_7d']['abandonment_rate'] ?? '40.2%') ?></strong></span>
+                    <span><?= __('Conversion Rate:') ?> <strong id="val-ec-cr"><?= $block->escapeHtml((string)($cardEcommerce['data_7d']['conversion_rate'] ?? '0.0%')) ?></strong></span>
+                    <span><?= __('Abandonment:') ?> <strong id="val-ec-abandon"><?= $block->escapeHtml((string)($cardEcommerce['data_7d']['abandonment_rate'] ?? '0.0%')) ?></strong></span>
                 </div>
             </div>
             <div class="wsc-card-footer">
@@ -298,57 +335,212 @@ $hasData = $block->hasData();
             </div>
         </div>
 
-        <!-- Card 7: Sentinel Domain Health & Infrastructure -->
+        <!-- Card 7: Sentinel Domain Health & SpeedSentinel 2.0 -->
         <div class="wsc-card wsc-card-interactive wsc-card-full-span" id="wsc-card-7" data-card="sentinel">
             <div class="wsc-card-inner">
                 <div class="wsc-card-header">
                     <div>
-                        <h3>7. <?= __('Sentinel Domain Health & Infrastructure') ?></h3>
-                        <small style="color: #64748b;"><?= __('Authoritative DNS Redundancy, DNSSEC, Port-25 Free Email Security & TLS Certificate Expiry') ?></small>
+                        <h3>7. <?= __('Sentinel Domain Health & SpeedSentinel 2.0 Dual-Thermometer') ?></h3>
+                        <small style="color: #64748b;"><?= __('Authoritative DNS Redundancy, DNSSEC, Port-25 Free Email Security, TLS Expiry & Playwright Lab CWV') ?></small>
                     </div>
                     <div class="wsc-sentinel-badges">
                         <span class="wsc-badge wsc-badge-score"><?= $block->escapeHtml((string)($domainHealth['score'] ?? 95)) ?>/100</span>
-                        <span class="wsc-badge wsc-badge-success"><?= $block->escapeHtml($domainHealth['status'] ?? 'HEALTHY') ?></span>
+                        <span class="wsc-badge wsc-badge-success"><?= $block->escapeHtml((string)($domainHealth['status'] ?? 'HEALTHY')) ?></span>
                     </div>
                 </div>
 
                 <div class="wsc-sentinel-row-grid">
                     <div class="wsc-sentinel-box">
                         <span class="wsc-box-lbl"><?= __('Nameservers') ?></span>
-                        <strong class="text-success"><?= $block->escapeHtml($domainHealth['dns']['redundancy'] ?? '✓ 2 Nameservers') ?></strong>
+                        <strong class="text-success"><?= $block->escapeHtml((string)($domainHealth['dns']['redundancy'] ?? '✓ 2 Nameservers')) ?></strong>
                         <small><?= __('Authoritative Redundancy') ?></small>
                     </div>
                     <div class="wsc-sentinel-box">
                         <span class="wsc-box-lbl"><?= __('DNSSEC') ?></span>
-                        <strong class="text-success"><?= $block->escapeHtml($domainHealth['dns']['dnssec'] ?? '✓ Active & Validated') ?></strong>
+                        <strong class="text-success"><?= $block->escapeHtml((string)($domainHealth['dns']['dnssec'] ?? '✓ Active & Validated')) ?></strong>
                         <small><?= __('Cryptographic Trust Chain') ?></small>
                     </div>
                     <div class="wsc-sentinel-box">
                         <span class="wsc-box-lbl"><?= __('Email Security') ?></span>
-                        <strong class="text-success"><?= $block->escapeHtml($domainHealth['mail']['summary'] ?? '✓ SPF & DMARC Enforced') ?></strong>
+                        <strong class="text-success"><?= $block->escapeHtml((string)($domainHealth['mail']['summary'] ?? '✓ SPF & DMARC Enforced')) ?></strong>
                         <small><?= __('DNS Authoritative (No Port 25)') ?></small>
                     </div>
                     <div class="wsc-sentinel-box">
-                        <span class="wsc-box-lbl"><?= __('SSL / TLS') ?></span>
-                        <strong class="text-success"><?= $block->escapeHtml($domainHealth['ssl']['days_remaining'] ?? '85 Days Remaining') ?></strong>
-                        <small><?= __('Certificate Valid') ?></small>
+                        <span class="wsc-box-lbl"><?= __('SpeedSentinel 2.0') ?></span>
+                        <strong class="text-success">🤖 RAG <?= $block->escapeHtml((string)($pagespeed['ai_rag_score'] ?? 92)) ?> &bull; 👤 CWV <?= $block->escapeHtml((string)($pagespeed['performance_score'] ?? 89)) ?></strong>
+                        <small><?= $block->escapeHtml((string)($domainHealth['ssl']['days_remaining'] ?? 'TLS Valid')) ?></small>
                     </div>
                 </div>
             </div>
             <div class="wsc-card-footer">
-                <small><?= __('Click for complete DNS, TLS & security header diagnostics') ?> &darr;</small>
+                <small><?= __('Click for complete DNS, TLS & SpeedSentinel diagnostics') ?> &darr;</small>
             </div>
         </div>
     </div>
 
     <!-- Detail Panel -->
-    <div class="wsc-detail-panel" id="wsc-detail-panel" style="display:none;">
+    <div class="wsc-detail-panel" id="wsc-detail-panel" style="display:none; margin-bottom: 1.5rem;">
         <div class="wsc-detail-header">
             <h3 id="wsc-detail-title"><?= __('Detailed Analysis') ?></h3>
             <button type="button" class="action-close" id="wsc-close-detail">&times;</button>
         </div>
         <div class="wsc-detail-content" id="wsc-detail-content"></div>
     </div>
+
+    <!-- v2.2.3 Enterprise Studio Grid: AI Coverage, Industry Benchmarks, AI Discovery & WSC Member Console -->
+    <div class="wsc-bento-grid" style="margin-top: 1.5rem;">
+
+        <!-- Panel A: AI Coverage Inspector -->
+        <div class="wsc-card">
+            <div class="wsc-card-inner">
+                <div class="wsc-card-header">
+                    <h3>🤖 <?= __('AI Coverage Inspector') ?></h3>
+                    <span class="wsc-badge wsc-badge-info"><?= __('RAG vs. Training') ?></span>
+                </div>
+                <p class="wsc-summary-text"><?= __('Inspect exact AI crawler and Search spider coverage for any Magento product, category, or CMS URL.') ?></p>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+                    <input type="text" id="wsc-ai-coverage-input" class="admin__control-text" placeholder="/catalog/product/..." value="/" style="flex:1;min-width:180px;">
+                    <select id="wsc-ai-coverage-tf" class="admin__control-select" style="width:100px;">
+                        <option value="7d">7d</option>
+                        <option value="30d" selected>30d</option>
+                    </select>
+                    <button type="button" class="action-primary" id="wsc-ai-coverage-btn"><?= __('Inspect URL') ?></button>
+                </div>
+                <div id="wsc-ai-coverage-result" style="font-size:13px;background:#f8fafc;padding:0.75rem;border-radius:6px;border:1px solid #e2e8f0;">
+                    <?= __('Enter a storefront path or full URL above to inspect GPTBot, OAI-SearchBot, ClaudeBot, PerplexityBot, and Googlebot hits.') ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel B: Dynamic Industry Benchmarks -->
+        <div class="wsc-card">
+            <div class="wsc-card-inner">
+                <div class="wsc-card-header">
+                    <h3>📊 <?= __('Dynamic Industry Benchmarks') ?></h3>
+                    <span class="wsc-badge wsc-badge-purple" id="wsc-bench-source"><?= $block->escapeHtml((string)($benchmarks['source'] ?? 'baseline')) ?></span>
+                </div>
+                <p class="wsc-summary-text">
+                    <?= __('Vertical:') ?> <strong id="wsc-bench-label"><?= $block->escapeHtml((string)($benchmarks['vertical_label'] ?? 'E-Commerce')) ?></strong>
+                    (<?= (int)($benchmarks['sample_nodes'] ?? 98) ?> <?= __('peer nodes') ?>)
+                </p>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+                    <select id="wsc-bench-vertical" class="admin__control-select" style="flex:1;min-width:180px;">
+                        <?php foreach ($verticals as $vCode => $vMeta): ?>
+                            <option value="<?= $block->escapeHtmlAttr($vCode) ?>" <?= (($benchmarks['vertical'] ?? '') === $vCode) ? 'selected' : '' ?>>
+                                <?= $block->escapeHtml($vMeta['icon'] . ' ' . $vMeta['label']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                    <button type="button" class="action-secondary" id="wsc-bench-classify-btn"><?= __('Save / Auto-Detect') ?></button>
+                    <button type="button" class="action-secondary" id="wsc-bench-refresh-btn">&#x21bb;</button>
+                </div>
+                <div id="wsc-bench-metrics">
+                    <?php if (!empty($benchmarks['metrics']) && is_array($benchmarks['metrics'])): ?>
+                        <?php foreach ($benchmarks['metrics'] as $mKey => $mData): ?>
+                            <div class="wsc-bot-item">
+                                <span><?= $block->escapeHtml((string)($mData['label'] ?? $mKey)) ?>: <strong><?= $block->escapeHtml((string)($mData['site_formatted'] ?? $mData['site'] ?? '0')) ?></strong></span>
+                                <span class="wsc-badge"><?= $block->escapeHtml((string)($mData['rating']['label'] ?? 'Median')) ?> (P50: <?= $block->escapeHtml((string)($mData['p50'] ?? '')) ?>)</span>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+
+        <!-- Panel C: AI Discovery (/llms.txt & Opt-In IndexNow) -->
+        <div class="wsc-card">
+            <div class="wsc-card-inner">
+                <div class="wsc-card-header">
+                    <h3>🚀 <?= __('AI Discovery: /llms.txt & Opt-In IndexNow') ?></h3>
+                    <span class="wsc-badge <?= $block->isIndexNowEnabled() ? 'wsc-badge-success' : '' ?>">
+                        IndexNow: <?= $block->isIndexNowEnabled() ? __('Active') : __('Opt-In (Off)') ?>
+                    </span>
+                </div>
+                <p class="wsc-summary-text">
+                    <strong>/llms.txt:</strong> <a href="<?= $block->escapeUrl($siteUrl . '/llms.txt') ?>" target="_blank" rel="noopener"><?= $block->escapeHtml($siteUrl . '/llms.txt') ?> ↗</a>
+                    (<?= $block->isLlmsTxtEnabled() ? __('Enabled') : __('Disabled') ?>)<br>
+                    <strong>IndexNow Key:</strong> <code><?= $block->escapeHtml($indexNowKey) ?></code>
+                    (<a href="<?= $block->escapeUrl($siteUrl . '/' . $indexNowKey . '.txt') ?>" target="_blank" rel="noopener"><?= __('Verify Key File ↗') ?></a>)
+                </p>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem;">
+                    <input type="text" id="wsc-indexnow-urls" class="admin__control-text" placeholder="<?= $block->escapeHtmlAttr($siteUrl . '/') ?>" value="<?= $block->escapeHtmlAttr($siteUrl . '/') ?>" style="flex:1;">
+                    <button type="button" class="action-primary" id="wsc-indexnow-btn"><?= __('Push IndexNow') ?></button>
+                </div>
+                <small id="wsc-indexnow-status" style="color:#64748b;display:block;">
+                    <?php if (!empty($indexNowLogs[0])): ?>
+                        <?= __('Last Push:') ?> HTTP <?= (int)($indexNowLogs[0]['status'] ?? 0) ?> (<?= (int)($indexNowLogs[0]['count'] ?? 0) ?> URLs, <?= $block->escapeHtml((string)($indexNowLogs[0]['timestamp'] ?? '')) ?>)
+                    <?php else: ?>
+                        <?= __('Published product saves automatically notify IndexNow when enabled in configuration.') ?>
+                    <?php endif; ?>
+                </small>
+            </div>
+        </div>
+
+        <!-- Panel D: Live WSC Member Credential & Agency Co-Branding -->
+        <div class="wsc-card">
+            <div class="wsc-card-inner">
+                <div class="wsc-card-header">
+                    <h3>🏛️ <?= __('WSC Member & Authority Credential') ?></h3>
+                    <span class="wsc-badge <?= $isLicensed ? 'wsc-badge-success' : 'wsc-badge-info' ?>" id="wsc-license-badge">
+                        <?= $block->escapeHtml(strtoupper((string)($membership['status'] ?? 'community'))) ?>
+                    </span>
+                </div>
+                <p class="wsc-summary-text" id="wsc-license-holder">
+                    <?php if ($isLicensed): ?>
+                        <strong><?= $block->escapeHtml((string)($membership['holder'] ?? 'Verified WSC Member')) ?></strong> &bull;
+                        <a href="<?= $block->escapeUrl((string)($membership['verify_url'] ?? 'https://www.worldsearchcouncil.org/verify')) ?>" target="_blank" rel="noopener"><?= __('Verify Credential ↗') ?></a> &bull;
+                        <a href="https://www.worldsearchcouncil.org/member" target="_blank" rel="noopener"><?= __('Open Member Console ↗') ?></a>
+                    <?php else: ?>
+                        <?= __('Connect your WSC-MEMBER-*, WSC-AGENCY-*, or WSC-PARTNER-* key for live portal verification, fleet heartbeat, and 100% ad-free UI.') ?>
+                    <?php endif; ?>
+                </p>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.75rem;flex-wrap:wrap;">
+                    <input type="text" id="wsc-license-input" class="admin__control-text" placeholder="WSC-MEMBER-XXXX-XXXX" value="<?= $block->escapeHtmlAttr((string)($membership['key'] ?? '')) ?>" style="flex:1;min-width:180px;">
+                    <button type="button" class="action-primary" id="wsc-license-verify-btn"><?= __('Verify Key') ?></button>
+                    <?php if (!empty($membership['key'])): ?>
+                        <button type="button" class="action-secondary" id="wsc-license-disconnect-btn"><?= __('Disconnect') ?></button>
+                    <?php endif; ?>
+                </div>
+                <?php if ($isLicensed && in_array(($membership['tier'] ?? ''), ['agency', 'founding_partner'], true)): ?>
+                    <details style="margin-top:0.5rem;">
+                        <summary style="cursor:pointer;font-weight:600;"><?= __('Agency Co-Branding Settings (Bidirectional Portal Sync)') ?></summary>
+                        <div style="display:grid;gap:0.5rem;margin-top:0.5rem;">
+                            <label><input type="checkbox" id="wsc-cb-enabled" <?= !empty($coBranding['enabled']) ? 'checked' : '' ?>> <?= __('Enable Agency Co-Branding Header') ?></label>
+                            <input type="text" id="wsc-cb-name" class="admin__control-text" placeholder="<?= __('Agency Name') ?>" value="<?= $block->escapeHtmlAttr((string)($coBranding['name'] ?? '')) ?>">
+                            <input type="url" id="wsc-cb-url" class="admin__control-text" placeholder="https://agency.example" value="<?= $block->escapeHtmlAttr((string)($coBranding['url'] ?? '')) ?>">
+                            <input type="url" id="wsc-cb-logo" class="admin__control-text" placeholder="https://agency.example/logo.png" value="<?= $block->escapeHtmlAttr((string)($coBranding['logo_url'] ?? '')) ?>">
+                            <input type="text" id="wsc-cb-tagline" class="admin__control-text" placeholder="<?= __('Certified WSC Search Partner') ?>" value="<?= $block->escapeHtmlAttr((string)($coBranding['tagline'] ?? '')) ?>">
+                            <button type="button" class="action-secondary" id="wsc-cb-save-btn"><?= __('Save & Sync Co-Branding') ?></button>
+                        </div>
+                    </details>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+
+    <!-- Featured WSC Ecosystem Partners (Rendered strictly for Community / Unlicensed installs — 100% Ad-Free for WSC Members) -->
+    <?php if (!$isLicensed && !empty($partners)): ?>
+        <div class="wsc-card" style="margin-top:1.5rem;">
+            <div class="wsc-card-inner">
+                <div class="wsc-card-header">
+                    <h3>🤝 <?= __('Verified WSC Certified Agencies & Ecosystem Partners') ?></h3>
+                    <small style="color:#64748b;"><?= __('Activate a WSC Member key above for a 100% sponsor-free workspace') ?></small>
+                </div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;">
+                    <?php foreach ($partners as $partner): ?>
+                        <div style="border:1px solid #e2e8f0;border-radius:8px;padding:0.85rem;background:#f8fafc;">
+                            <strong><?= $block->escapeHtml((string)($partner['name'] ?? 'WSC Partner')) ?></strong>
+                            <span class="wsc-badge" style="float:right;"><?= $block->escapeHtml((string)($partner['tier_badge'] ?? 'Partner')) ?></span>
+                            <p style="font-size:12px;color:#475569;margin:0.5rem 0;"><?= $block->escapeHtml((string)($partner['specialty'] ?? '')) ?></p>
+                            <?php if (!empty($partner['url'])): ?>
+                                <a href="<?= $block->escapeUrl((string)$partner['url']) ?>" target="_blank" rel="noopener" style="font-size:12px;font-weight:600;"><?= __('View Partner Profile ↗') ?></a>
+                            <?php endif; ?>
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+        </div>
+    <?php endif; ?>
 </div>
 
 <script>
@@ -362,10 +554,12 @@ $hasData = $block->hasData();
         cardEcommerce: <?= json_encode($cardEcommerce) ?>,
         domainHealth: <?= json_encode($domainHealth) ?>,
         pagespeed: <?= json_encode($pagespeed) ?>,
+        dispatchUrl: '<?= $block->escapeUrl($block->getDispatchUrl()) ?>',
         refreshUrl: '<?= $block->escapeUrl($block->getRefreshUrl()) ?>',
         cardsUrl: '<?= $block->escapeUrl($block->getCardsUrl()) ?>',
         pagespeedUrl: '<?= $block->escapeUrl($block->getPagespeedUrl()) ?>',
         sentinelUrl: '<?= $block->escapeUrl($block->getSentinelUrl()) ?>',
+        formKey: '<?= $block->escapeJs($block->getFormKey()) ?>',
         siteHost: '<?= $block->escapeJs($block->getSiteHost()) ?>',
         siteUrl: '<?= $block->escapeUrl($block->getSiteUrl()) ?>'
     };

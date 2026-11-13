@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Wsc\Analytics\Model;
 
 use Magento\Framework\App\Filesystem\DirectoryList;
@@ -9,7 +11,7 @@ use PDO;
 use Exception;
 
 /**
- * Manages local SQLite storage with WAL mode in Magento 2.
+ * Manages local SQLite storage with WAL mode in Magento 2 (Zero-PII).
  */
 class DatabaseManager
 {
@@ -22,7 +24,7 @@ class DatabaseManager
     {
         $this->logger = $logger;
         $varDir = $filesystem->getDirectoryRead(DirectoryList::VAR_DIR)->getAbsolutePath();
-        $this->storageDir = $varDir . 'wsc_analytics';
+        $this->storageDir = rtrim($varDir, '/') . '/wsc_analytics';
         $this->ensureStorageDirectory();
         $this->initSchemas();
     }
@@ -128,6 +130,18 @@ class DatabaseManager
                     blocked INTEGER DEFAULT 0,
                     PRIMARY KEY (date, bot_name)
                 );
+
+                CREATE TABLE IF NOT EXISTS wsc_bot_hits (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    hit_at INTEGER NOT NULL,
+                    bot_name TEXT NOT NULL,
+                    bot_category TEXT NOT NULL,
+                    bot_type TEXT NOT NULL,
+                    url_path TEXT NOT NULL,
+                    session_hash TEXT DEFAULT ''
+                );
+                CREATE INDEX IF NOT EXISTS idx_wsc_bot_hits_time ON wsc_bot_hits (hit_at DESC);
+                CREATE INDEX IF NOT EXISTS idx_wsc_bot_hits_path ON wsc_bot_hits (url_path);
             ");
         } catch (Exception $e) {
             $this->logger->error('WSC Magento SQLite Init Error: ' . $e->getMessage());

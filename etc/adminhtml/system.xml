@@ -7,7 +7,7 @@
         </tab>
         <section id="wsc_analytics" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="1">
             <class>separator-top</class>
-            <label>WSC Analytics &amp; Bot Shield</label>
+            <label>WSC Search &amp; Health Analytics</label>
             <tab>wsc</tab>
             <resource>Wsc_Analytics::config</resource>
 
@@ -28,10 +28,11 @@
             </group>
 
             <group id="gateway" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
-                <label>WSC Gateway &amp; Encryption</label>
-                <field id="hybrid_enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Enable Hybrid Sync</label>
+                <label>WSC Gateway &amp; Hybrid Encryption (Opt-In)</label>
+                <field id="hybrid_enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Hybrid Sync to WSC Cloud Gateway (Opt-In)</label>
                     <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Disabled by default for Zero-PII privacy compliance. Enable to pair via /v1/register.</comment>
                 </field>
                 <field id="gateway_url" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Gateway URL</label>
@@ -39,8 +40,51 @@
                 <field id="project_id" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
                     <label>Project ID</label>
                 </field>
-                <field id="local_key" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
-                    <label>Local AES-256 Key</label>
+                <field id="api_secret" translate="label" type="obscure" sortOrder="35" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Gateway HMAC API Secret</label>
+                </field>
+                <field id="local_key" translate="label" type="obscure" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Local AES-256 Key (64-char Hex)</label>
+                </field>
+            </group>
+
+            <group id="membership" translate="label" type="text" sortOrder="25" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>WSC Membership, Credentials &amp; Agency Co-Branding</label>
+                <field id="license_key" translate="label comment" type="text" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>WSC Member / Partner Credential Key</label>
+                    <comment>Optional credential from worldsearchcouncil.org/member/licenses. 100% of local features remain unlocked without a key.</comment>
+                </field>
+                <field id="license_status" translate="label" type="text" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Credential Status</label>
+                </field>
+                <field id="license_tier" translate="label" type="text" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Membership Tier</label>
+                </field>
+                <field id="license_holder" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Verified Credential Holder</label>
+                </field>
+                <field id="co_branding" translate="label" type="textarea" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Agency Co-Branding JSON</label>
+                </field>
+            </group>
+
+            <group id="ai_indexnow" translate="label" type="text" sortOrder="28" showInDefault="1" showInWebsite="1" showInStore="1">
+                <label>AI Readiness (/llms.txt), Benchmarks &amp; Opt-In IndexNow</label>
+                <field id="llms_txt_enabled" translate="label" type="select" sortOrder="10" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Serve Public /llms.txt AI Manifest</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                </field>
+                <field id="industry_vertical" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Industry Benchmark Vertical</label>
+                    <source_model>Wsc\Analytics\Model\Config\Source\IndustryVertical</source_model>
+                </field>
+                <field id="indexnow_enabled" translate="label comment" type="select" sortOrder="30" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>Enable Automatic IndexNow Push on Product Save (Opt-In)</label>
+                    <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    <comment>Strictly opt-in (default No). Pings api.indexnow.org when active products are saved.</comment>
+                </field>
+                <field id="indexnow_key" translate="label" type="text" sortOrder="40" showInDefault="1" showInWebsite="1" showInStore="1">
+                    <label>IndexNow Verification Key (32-char Hex)</label>
                 </field>
             </group>
 

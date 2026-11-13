@@ -5,4 +5,8 @@
         <observer name="wsc_analytics_sales_order_place_after"
                   instance="Wsc\Analytics\Observer\OrderPlaceAfterObserver"/>
     </event>
+    <event name="catalog_product_save_after">
+        <observer name="wsc_analytics_catalog_product_save_after"
+                  instance="Wsc\Analytics\Observer\ProductSaveAfterObserver"/>
+    </event>
 </config>
